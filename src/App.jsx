@@ -1,146 +1,201 @@
-// Paste the single-file component here (converted to App). This file contains the UI and logic.
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-export default function App() {
-  const templates = [
-    { id: 1, title: "GF RX - Primary Template", desc: "Landing + Redirect example (primary)", thumb: "https://girlfriend-rx.netlify.app/", url: "https://girlfriend-rx.netlify.app/", tag: "featured" },
-    { id: 2, title: "Neon Console", desc: "Green-dark console vibe with animated code", thumb: "https://via.placeholder.com/640x360?text=Neon+Console", url: "https://example.com/template/neon-console", tag: "ui" },
-    { id: 3, title: "Red Surge", desc: "Aggressive red/blue highlights, fast UI", thumb: "https://via.placeholder.com/640x360?text=Red+Surge", url: "https://example.com/template/red-surge", tag: "ui" },
-    { id: 4, title: "Deep Matrix", desc: "Matrix-like animated background + cards", thumb: "https://via.placeholder.com/640x360?text=Deep+Matrix", url: "https://example.com/template/deep-matrix", tag: "visual" }
-  ]
+export default function HackingViewNeonWebsite() {
+  const [showIntro, setShowIntro] = useState(true);
+  const [neonColor, setNeonColor] = useState("#00ffea");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [uploadedTemplates, setUploadedTemplates] = useState([]);
 
-  const [selected, setSelected] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    if (document.getElementById("hv-style")) return;
+    const css = `
+:root{--neon:${neonColor};}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;background:#050306;color:#e6f7ff;font-family:Inter,system-ui}
+.hv-wrap{position:relative;min-height:100vh;overflow:hidden;padding-bottom:84px}
 
-  function openTemplate(t) { setSelected(t); setShowModal(true); }
-  function redirectNow(url) { setSearching(true); setTimeout(() => { window.location.href = url; }, 900); }
+/* subtle animated background */
+.bg-glow{position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(circle at 10% 20%, rgba(255,60,255,0.06), transparent 20%),
+  radial-gradient(circle at 80% 70%, rgba(0,255,234,0.06), transparent 20%),
+  radial-gradient(circle at 50% 50%, rgba(255,212,0,0.03), transparent 30%);
+filter:blur(70px);transform:scale(1);animation:shift 26s infinite alternate ease-in-out}
+@keyframes shift{to{transform:scale(1.12) translate(-3%,-2%)}}
+
+/* header + layout */
+header{padding:22px 28px;border-bottom:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:12px}
+.logo .dot{width:12px;height:12px;border-radius:4px;background:var(--neon);box-shadow:0 0 14px var(--neon)}
+.title{font-weight:700;font-size:18px}
+
+/* featured large template */
+.featured-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;margin:20px 28px}
+.featured-card{flex:1 1 720px;min-width:320px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);border-radius:12px;padding:14px;display:flex;gap:14px;align-items:center}
+.thumbnail{width:420px;max-width:48%;min-height:220px;border-radius:10px;background-size:cover;background-position:center;border:1px solid rgba(255,255,255,0.03);display:flex;align-items:end;justify-content:space-between;padding:12px;position:relative;overflow:hidden;cursor:pointer}
+.thumbnail .badge{position:absolute;left:12px;top:12px;background:linear-gradient(90deg,var(--neon),#fff);color:#000;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;opacity:0.95}
+.thumbnail .locked{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.6));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-weight:700;font-size:18px;backdrop-filter: blur(2px)}
+.card-info{flex:1;padding:8px 4px;min-width:220px}
+.project-title{font-size:20px;font-weight:800;color:var(--neon);margin-bottom:8px}
+.project-desc{color:rgba(255,255,255,0.72);margin-bottom:12px;line-height:1.35}
+.contact-row{display:flex;gap:10px;align-items:center}
+.cta-btn{padding:10px 14px;border-radius:10px;background:var(--neon);color:#001;cursor:pointer;border:none;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.small-note{font-size:13px;color:rgba(255,255,255,0.65)}
+
+/* templates grid (others locked) */
+.grid-wrap{padding:0 28px 40px 28px;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{padding:14px;border-radius:10px;position:relative;overflow:hidden;cursor:not-allowed;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+.card .name{font-weight:700}
+.card .meta{font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px}
+.lock-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.4),rgba(0,0,0,0.6));display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.9);font-weight:700}
+
+/* bottom bar */
+.bottom-bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px;background:rgba(0,0,0,0.55);display:flex;align-items:center;gap:14px;border-top:1px solid rgba(255,255,255,0.03)}
+.marquee{overflow:hidden;flex:1}
+.marquee p{white-space:nowrap;display:inline-block;padding-left:100%;animation:marq 18s linear infinite}
+@keyframes marq{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* responsiveness */
+@media (max-width:980px){.thumbnail{max-width:46%}.featured-card{flex-direction:column}.thumbnail{width:100%;max-width:100%}.card{cursor:default}}
+`;
+    const tag = document.createElement("style");
+    tag.id = "hv-style";
+    tag.innerHTML = css;
+    document.head.appendChild(tag);
+  }, [neonColor]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowIntro(false), 4500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // featured template data (new)
+  const featured = {
+    id: "featured-001",
+    name: "Cyber Ninja — Neon Landing",
+    desc: "A futuristic neon hacker landing — click thumbnail to visit live demo at cyber-ninjas.top. Locked templates shown below.",
+    thumb: "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'>
+        <defs>
+          <linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='#00ffea'/><stop offset='1' stop-color='#ff3bff'/></linearGradient>
+        </defs>
+        <rect width='100%' height='100%' fill='#030205'/>
+        <g transform='translate(80,80)'>
+          <rect x='0' y='0' rx='18' ry='18' width='1040' height='640' fill='url(#g)' opacity='0.08'/>
+          <text x='40' y='90' fill='#00ffea' font-size='48' font-family='Inter, sans-serif' font-weight='700'>Cyber Ninja — Neon</text>
+          <text x='40' y='140' fill='#dff' font-size='18' font-family='Inter, sans-serif'>Future hacker landing • Preview demo</text>
+        </g>
+      </svg>
+    `)
+  };
+
+  function openFeatured() {
+    // open cyber-ninjas.top in new tab
+    try {
+      window.open("https://cyber-ninjas.top", "_blank", "noopener");
+    } catch (e) {
+      console.warn("Cannot open external link:", e);
+    }
+  }
+
+  function handleTemplateClick(tpl) {
+    // for unlocked featured we open site; other templates are locked (no action)
+    if (tpl.id === featured.id) return openFeatured();
+    // otherwise show small notice (no-op in build) - keep UX friendly
+    alert("This template is locked — featured demo available. Contact for access.");
+  }
+
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const newTpl = { name: file.name, desc: `Uploaded template (${file.type || "file"})`, id: Date.now() };
+    setUploadedTemplates((s) => [newTpl, ...s]);
+    e.target.value = null;
+  }
 
   return (
-    <div className="min-h-screen bg-[#071018] text-slate-100 font-sans relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="animate-float opacity-20 mix-blend-screen" style={{backgroundImage: 'radial-gradient(circle at 10% 10%, rgba(16,255,144,0.06), transparent 6%), radial-gradient(circle at 90% 80%, rgba(77,132,255,0.06), transparent 8%)', width: '150%', height: '150%', transform: 'translate(-10%, -10%)'}} />
-      </div>
+    <div className="hv-wrap">
+      <div className="bg-glow" />
 
-      <header className="relative z-10 p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center shadow-2xl">
-            <span className="font-mono text-xl tracking-wider">RX</span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold leading-tight">Hacker Templates — RX</h1>
-            <p className="text-sm text-slate-300">green-dark • red-blue accents • animated interaction</p>
-          </div>
-        </div>
-
-        <nav className="flex items-center gap-3">
-          <button className="px-4 py-2 rounded-lg font-mono text-xs border border-slate-700 hover:scale-105 transition transform">Docs</button>
-          <button className="px-4 py-2 rounded-lg font-mono text-xs bg-gradient-to-r from-red-600 to-blue-500 hover:brightness-110 transition">Get Theme</button>
-        </nav>
-      </header>
-
-      <main className="relative z-10 p-6">
-        <section className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div className="col-span-2 bg-gradient-to-br from-[#022018] to-[#061127] p-6 rounded-2xl border border-slate-800 shadow-lg">
-            <div className="flex items-start gap-6">
-              <div className="w-1/3">
-                <div className="aspect-video rounded-lg overflow-hidden border border-slate-700 shadow-inner">
-                  <img src={templates[0].thumb} alt="primary" className="w-full h-full object-cover brightness-90 hover:scale-105 transition-transform"/>
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <h2 className="text-2xl font-semibold tracking-tight">HACKING ENTRY READY</h2>
-                <p className="mt-2 text-slate-300">Click any template thumbnail to preview and redirect. Every card has micro-animations, and buttons show a hacking-like searching pulse before redirect.</p>
-
-                <div className="mt-4 flex gap-3">
-                  <button onClick={() => openTemplate(templates[0])} className="px-4 py-2 rounded-lg font-mono text-sm bg-gradient-to-r from-green-400 to-green-600 hover:scale-105 transform transition shadow-md">Enter Template</button>
-                  <button onClick={() => window.scrollTo({top: 400, behavior: 'smooth'})} className="px-4 py-2 rounded-lg border border-slate-700 font-mono text-sm hover:scale-105 transition">Explore more</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#05121a] p-6 rounded-2xl border border-slate-800 shadow-lg">
-            <h3 className="font-mono text-sm uppercase text-slate-300">Stats</h3>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div className="p-3 bg-gradient-to-b from-[#042220] to-transparent rounded-lg border border-slate-800">
-                <div className="text-xs text-slate-300">Templates</div>
-                <div className="text-2xl font-bold">{templates.length}</div>
-              </div>
-              <div className="p-3 bg-gradient-to-b from-[#220d12] to-transparent rounded-lg border border-slate-800">
-                <div className="text-xs text-slate-300">Active</div>
-                <div className="text-2xl font-bold">1</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h3 className="mb-4 text-lg font-semibold">Templates</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {templates.map((t) => (
-              <article key={t.id} className="relative group bg-[#081518] rounded-2xl border border-slate-800 overflow-hidden shadow-md p-0">
-                <div className="aspect-video overflow-hidden">
-                  <a href="#" onClick={(e) => { e.preventDefault(); openTemplate(t); }}>
-                    <img src={t.thumb} alt={t.title} className="w-full h-full object-cover transform group-hover:scale-105 transition" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 opacity-0 group-hover:opacity-100 transition" />
-                  </a>
-                </div>
-
-                <div className="p-4">
-                  <h4 className="font-semibold">{t.title}</h4>
-                  <p className="text-sm text-slate-300 mt-1">{t.desc}</p>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="text-xs font-mono text-slate-400">{t.tag}</div>
-                    <div className="flex gap-2">
-                      <button onClick={() => openTemplate(t)} className="px-3 py-1 rounded-md font-mono text-sm border border-slate-700 hover:scale-105 transition">Preview</button>
-                      <button onClick={() => redirectNow(t.url)} className="px-3 py-1 rounded-md font-mono text-sm bg-gradient-to-r from-red-500 to-blue-500 hover:brightness-110 transition">Open</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="absolute right-3 top-3 px-2 py-1 rounded bg-gradient-to-r from-green-400 to-blue-500 text-black text-xs font-semibold opacity-90">NEW</div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </main>
-
-      {showModal && selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setShowModal(false); setSearching(false); }} />
-
-          <div className="relative z-10 max-w-3xl w-full rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-gradient-to-br from-[#021014] to-[#041021]">
-            <div className="p-4 flex items-start gap-4">
-              <div className="w-40 rounded overflow-hidden border border-slate-700">
-                <img src={selected.thumb} alt={selected.title} className="w-full h-full object-cover"/>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold">{selected.title}</h3>
-                <p className="text-sm text-slate-300 mt-1">{selected.desc}</p>
-
-                <div className="mt-4 flex gap-3">
-                  <button onClick={() => redirectNow(selected.url)} className="px-4 py-2 rounded-lg font-mono bg-gradient-to-r from-green-400 to-green-600 hover:scale-105 transition">{searching ? 'Searching...' : 'Redirect & Enter'}</button>
-                  <button onClick={() => { setShowModal(false); setSearching(false); }} className="px-4 py-2 rounded-lg border border-slate-700 font-mono">Cancel</button>
-                </div>
-              </div>
-
-              <div className="w-48 p-3 ml-2 rounded bg-[#031018] border border-slate-800 font-mono text-xs text-slate-300">
-                <div className="pb-2">Status</div>
-                <div className="h-8 rounded bg-gradient-to-r from-[#062b18] to-transparent flex items-center px-2">idle</div>
-              </div>
+      {showIntro && (
+        <div style={{position:"fixed",inset:0,zIndex:60,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.78)"}}>
+          <div style={{width:520,maxWidth:"90%",padding:24,borderRadius:12,background:"linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))",border:"1px solid rgba(0,255,234,0.06)"}}>
+            <div style={{color:neonColor,fontWeight:800,fontSize:22,marginBottom:8}}>HACKING SEQUENCE — initializing</div>
+            <div style={{background:"rgba(0,0,0,0.6)",padding:12,borderRadius:8,fontFamily:"monospace",fontSize:13,color:"#a8f0ea"}}>
+              <div>Connecting to target... <span style={{display:"inline-block",width:8,height:18,background:neonColor,marginLeft:6}} /></div>
+              <div style={{marginTop:10}}>Executing payload: <strong>rx-view-nion</strong></div>
+              <div style={{marginTop:8,fontSize:12,color:"rgba(255,255,255,0.6)"}}>Please wait — establishing secure channel (simulated)</div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="fixed left-4 bottom-6 z-20">
-        <div className="p-3 rounded-lg border border-slate-800 bg-gradient-to-b from-[#021217] to-transparent font-mono text-sm">Hacker UI • Animations Enabled</div>
+      <header>
+        <div className="logo">
+          <div className="dot" style={{boxShadow:`0 0 14px ${neonColor}`}} />
+          <div>
+            <div className="title">Hacking View — Neon Templates</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,0.45)"}}>Rx Abdullah • Showcase</div>
+          </div>
+        </div>
+
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <input type="color" value={neonColor} onChange={(e)=>setNeonColor(e.target.value)} title="Change neon color" style={{width:46,height:34,borderRadius:8,border:"none",padding:2}} />
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.45)"}}>{uploadedTemplates.length} templates</div>
+        </div>
+      </header>
+
+      {/* FEATURED BIG TEMPLATE */}
+      <div className="featured-wrap">
+        <div className="featured-card">
+          <div
+            className="thumbnail"
+            role="button"
+            onClick={()=>handleTemplateClick(featured)}
+            title="Open featured demo (cyber-ninjas.top)"
+            style={{backgroundImage:`url("${featured.thumb}")`}}
+          >
+            <div className="badge">NEW • FUTURE</div>
+            {/* thumbnail bottom-left overlay */}
+            <div style={{position:"absolute",left:12,bottom:12,color:"#001",background:"rgba(255,255,255,0.9)",padding:"6px 10px",borderRadius:8,fontWeight:700,fontSize:13}}>Open demo</div>
+          </div>
+
+          <div className="card-info">
+            <div className="project-title">{featured.name}</div>
+            <div className="project-desc">{featured.desc}</div>
+
+            <div className="contact-row" style={{marginTop:12}}>
+              <a className="cta-btn" href="mailto:hello@cyber-ninjas.top?subject=Template%20help%20-%20Cyber%20Ninja" onClick={(e)=>{/* analytics hook possible */}}>Contact</a>
+              <div className="small-note">If you need help or access to locked templates, click Contact — we'll respond fast.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <style>{`@keyframes floatY { 0% { transform: translateY(0) } 50% { transform: translateY(-6px) } 100% { transform: translateY(0) } } .animate-float { animation: floatY 8s ease-in-out infinite; } .button-scan::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02)); transform: translateX(-120%); transition: transform .8s ease; } .group:hover .button-scan::after { transform: translateX(120%); } .flicker { animation: flick 1.5s steps(2, end) infinite; } @keyframes flick { 0% { opacity: .8 } 50% { opacity: .15 } 100% { opacity: .9 } } `}</style>
+      {/* TEMPLATES GRID - others show locked */}
+      <div className="grid-wrap">
+        <div className="grid">
+          {[...Array(6)].map((_,i)=>({
+            id:`tpl-${i+1}`, name:`Neon Template ${i+1}`, desc:`Preview locked — contact for access.`
+          })).concat(uploadedTemplates).map((tpl, idx) => (
+            <div key={tpl.id || idx} className="card" onClick={()=>handleTemplateClick(tpl)}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div className="name">{tpl.name}</div>
+                  <div className="meta">{tpl.desc}</div>
+                </div>
+              </div>
+              <div className="lock-overlay">LOCKED</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bottom-bar">
+        <div style={{width:8,height:8,borderRadius:2,background:neonColor,boxShadow:`0 0 18px ${neonColor}`}} />
+        <div className="marquee"><p>Welcome — Thanks for visiting RX website · Neon templates · Featured demo: cyber-ninjas.top · Contact for locked templates</p></div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.5)'}}>v1.2</div>
+      </div>
     </div>
-  )
+  );
 }
